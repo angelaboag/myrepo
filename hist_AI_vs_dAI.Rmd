@@ -105,8 +105,8 @@ ggplot(projAI3) +
     legend.position = "none",
     panel.border = element_blank() ) +
   xlab("") +
-  ylab("Value of Y") +
-  facet_grid(Grassland_Type ~ .)
+  ylab("mean annual aridity index (mm)")
+  #+ facet_grid(Grassland_Type ~ .)
 
 ```
 
@@ -134,13 +134,14 @@ ggtall <- ggplot(tall) +
   geom_point( aes(x = St_Unit_Nm, y = X2081_2099_18model_AI), 
               color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
   coord_flip()+
-  theme_light() +
+  theme_classic() +
   theme(
     legend.position = "none",
     panel.border = element_blank() ) +
   xlab("") +
     ylab(" ") +
-  ylim(0, 1.7)
+  ylim(0, 1.7) +
+  theme(text = element_text(size=14))
 
 ggmixed <- ggplot(mixed) +
   geom_segment( aes(x = reorder(St_Unit_Nm, X2081_2099_18model_AI), 
@@ -152,13 +153,14 @@ ggmixed <- ggplot(mixed) +
   geom_point( aes(x = St_Unit_Nm, y = X2081_2099_18model_AI), 
               color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
   coord_flip()+
-  theme_light() +
+  theme_classic() +
   theme(
     legend.position = "none",
     panel.border = element_blank() ) +
   xlab("") +
     ylab(" ") +
-  ylim(0, 1.7)
+  ylim(0, 1.7) +
+  theme(text = element_text(size=14))
 
 ggsand <- ggplot(sand) +
   geom_segment( aes(x = reorder(St_Unit_Nm, X2081_2099_18model_AI), 
@@ -170,13 +172,15 @@ ggsand <- ggplot(sand) +
   geom_point( aes(x = St_Unit_Nm, y = X2081_2099_18model_AI), 
               color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
   coord_flip()+
-  theme_light() +
+  theme_minimal() +
+  theme_classic() +
   theme(
     legend.position = "none",
     panel.border = element_blank() ) +
   xlab("") +
   ylab(" ") +
-  ylim(0, 1.7)
+  ylim(0, 1.7) +
+  theme(text = element_text(size=14))
 
 ggshort <- ggplot(short) +
   geom_segment( aes(x = reorder(St_Unit_Nm, X2081_2099_18model_AI), 
@@ -187,18 +191,20 @@ ggshort <- ggplot(short) +
               color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
   geom_point( aes(x = St_Unit_Nm, y = X2081_2099_18model_AI), 
               color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
-  coord_flip()+
-  theme_light() +
+  coord_flip() +
+  theme_classic() +
   theme(
     legend.position = "none",
     panel.border = element_blank() ) +
   xlab("") +
   ylab("mean annual aridity index (mm)") +
-  ylim(0, 1.7)
+  ylim(0, 1.7) +
+  theme(text = element_text(size=14))
 
 require(gridExtra)
 
-grid.arrange(ggtall, ggmixed, ggsand, ggshort, ncol = 1)
-ggsave("aveAI_largePAs.png", dpi = 300)
+ggall <- grid.arrange(ggtall, ggmixed, ggsand, ggshort, ncol = 1)
+g <- arrangeGrob(ggtall, ggmixed, ggsand, ggshort, ncol = 1)
+ggsave("aveAI_largePAs.png", dpi = 300, height = 16, width = 8, g)
 
 ```
