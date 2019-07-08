@@ -9,14 +9,21 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Aridity index projections for protected areas in US grasslands
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+This analysis summarizes aridity projections (Seager et al. 2018) across
+protected areas in US grasslands. First, we selected three models to represent
+different future scenarios for AI in addition to the ensemble model average
+projection. 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r choosing models}
+setwd("~/WestClim/100thMeridian/protected_grasslands")
 
-```{r cars}
-setwd("~/WestClim/100thMeridian/AI_protected_areas")
+# Loading mean 2081-2099 AI projections for the entire area covering US plains
+# grasslands, and summarizing those projections to identify 3 scenarios. 
+# 1: Most positive median AI by 2081-2099; 2: most negative median AI; 
+# 3: Lowest mean SD for AI by 2081-2099
+
 models <- read.csv("dAI_2080_2099grasslands.csv")
 head(models)
 
@@ -24,8 +31,9 @@ head(models)
 library(tidyr)
 library(ggplot2)
 library(dplyr)
+library(plyr)
 
-models2 <- gather(models, modelNo, dAI, daAI_m1:daAI_m18, factor_key = TRUE)
+models2 <- gather(models, modelNo, dAI, dAI_m1:dAI_m18, factor_key = TRUE)
 
 head(models2)
 str(models2)
@@ -46,12 +54,151 @@ ggplot(models2, aes(x = modelNo, y = dAI)) +
 
 ```
 
-## Including Plots
+```{r}
+projAI <- read.csv("largestPAs_AI_proj.csv")
+head(projAI)
 
-You can also embed plots, for example:
+# Create vector of variables that I want to keep in a cleaner version of this 
+# dataset. 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+vars <- c("FID","Category", "d_Own_Name", "d_Mang_Typ", "d_Mang_Nam", "Unit_Nm",
+          "d_State_Nm", "Grassland_Type", "GIS_Acres", "SD_histAI",
+          "X2041_60_pos75", "X2081_99_pos75", "X2041_60_neg75", 
+          "X2081_99_neg75", "X2041_2060_18model_AI", "X2081_2099_18model_AI",
+          "X1979_2015_aveAI", "X2041_2060_d18_m18", "X2081_2099_d18_m18", 
+          "X2041_2060_dAI_m14", "X2081_2099_dAI_m14", "X2041_2060_dAI_m13",
+          "X2081_2099_dAI_m13")
+projAI2 <- projAI[vars]
+head(projAI2)
+          
+
+ggplot(projAI2, aes(x = X1979_2015_aveAI, y = X2081_2099_18model_AI, 
+                    shape = Grassland_Type)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  xlim(0, 1.7) +
+  ylim(0, 1.7) +
+  labs(x="mean annual aridity index 1979-2015", 
+       y = "mean annual aridity index 
+       (18-model ensemble) 2081-2099") +
+   theme_classic()
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+# Lollipop plot for average AI
+attach(projAI2)
+projAI3 <- projAI2[order(X1979_2015_aveAI), ]
+          
+
+ggplot(projAI3) +
+  geom_segment( aes(x = reorder(Unit_Nm, X2081_2099_18model_AI), xend = Unit_Nm, 
+                    y = X1979_2015_aveAI, 
+                    yend = X2081_2099_18model_AI), color="grey") +
+  geom_point( aes(x = Unit_Nm, y = X1979_2015_aveAI), 
+              color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
+  geom_point( aes(x = Unit_Nm, y = X2081_2099_18model_AI), 
+              color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
+  coord_flip()+
+  theme_light() +
+  theme(
+    legend.position = "none",
+    panel.border = element_blank() ) +
+  xlab("") +
+  ylab("Value of Y") +
+  facet_grid(Grassland_Type ~ .)
+
+```
+
+```{r, graphs for individual grassland types}
+
+# Create new Unit Name variable with the state included. 
+
+projAI3$St_Unit_Nm <- paste(projAI3$d_State_Nm, "-", projAI3$Unit_Nm)
+head(projAI3)
+
+tall <- projAI3[ which(projAI3$Grassland_Type == 'tall'),]
+head(tall)
+
+mixed <- projAI3[ which(projAI3$Grassland_Type == 'mixed'),]
+sand <- projAI3[ which(projAI3$Grassland_Type == 'sand'),]
+short <- projAI3[ which(projAI3$Grassland_Type == 'short'),]
+
+ggtall <- ggplot(tall) +
+  geom_segment( aes(x = reorder(St_Unit_Nm, X2081_2099_18model_AI), 
+                    xend = St_Unit_Nm, 
+                    y = X1979_2015_aveAI, 
+                    yend = X2081_2099_18model_AI), color="grey") +
+  geom_point( aes(x = St_Unit_Nm, y = X1979_2015_aveAI), 
+              color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
+  geom_point( aes(x = St_Unit_Nm, y = X2081_2099_18model_AI), 
+              color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
+  coord_flip()+
+  theme_light() +
+  theme(
+    legend.position = "none",
+    panel.border = element_blank() ) +
+  xlab("") +
+    ylab(" ") +
+  ylim(0, 1.7)
+
+ggmixed <- ggplot(mixed) +
+  geom_segment( aes(x = reorder(St_Unit_Nm, X2081_2099_18model_AI), 
+                    xend = St_Unit_Nm, 
+                    y = X1979_2015_aveAI, 
+                    yend = X2081_2099_18model_AI), color="grey") +
+  geom_point( aes(x = St_Unit_Nm, y = X1979_2015_aveAI), 
+              color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
+  geom_point( aes(x = St_Unit_Nm, y = X2081_2099_18model_AI), 
+              color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
+  coord_flip()+
+  theme_light() +
+  theme(
+    legend.position = "none",
+    panel.border = element_blank() ) +
+  xlab("") +
+    ylab(" ") +
+  ylim(0, 1.7)
+
+ggsand <- ggplot(sand) +
+  geom_segment( aes(x = reorder(St_Unit_Nm, X2081_2099_18model_AI), 
+                    xend = St_Unit_Nm, 
+                    y = X1979_2015_aveAI, 
+                    yend = X2081_2099_18model_AI), color="grey") +
+  geom_point( aes(x = St_Unit_Nm, y = X1979_2015_aveAI), 
+              color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
+  geom_point( aes(x = St_Unit_Nm, y = X2081_2099_18model_AI), 
+              color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
+  coord_flip()+
+  theme_light() +
+  theme(
+    legend.position = "none",
+    panel.border = element_blank() ) +
+  xlab("") +
+  ylab(" ") +
+  ylim(0, 1.7)
+
+ggshort <- ggplot(short) +
+  geom_segment( aes(x = reorder(St_Unit_Nm, X2081_2099_18model_AI), 
+                    xend = St_Unit_Nm, 
+                    y = X1979_2015_aveAI, 
+                    yend = X2081_2099_18model_AI), color="grey") +
+  geom_point( aes(x = St_Unit_Nm, y = X1979_2015_aveAI), 
+              color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
+  geom_point( aes(x = St_Unit_Nm, y = X2081_2099_18model_AI), 
+              color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
+  coord_flip()+
+  theme_light() +
+  theme(
+    legend.position = "none",
+    panel.border = element_blank() ) +
+  xlab("") +
+  ylab("mean annual aridity index (mm)") +
+  ylim(0, 1.7)
+
+require(gridExtra)
+
+grid.arrange(ggtall, ggmixed, ggsand, ggshort, ncol = 1)
+ggsave("aveAI_largePAs.png", dpi = 300)
+
+```
