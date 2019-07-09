@@ -64,7 +64,8 @@ head(projAI)
 vars <- c("FID","Category", "d_Own_Name", "d_Mang_Typ", "d_Mang_Nam", "Unit_Nm",
           "d_State_Nm", "Grassland_Type", "GIS_Acres", "SD_histAI",
           "X2041_60_pos75", "X2081_99_pos75", "X2041_60_neg75", 
-          "X2081_99_neg75", "X2041_2060_18model_AI", "X2081_2099_18model_AI",
+          "X2081_99_neg75", "X2041_2060_18model_AI", "X2041_2060_18model_dAI",
+          "X2081_2099_18model_AI", "X2081_2099_18model_dAI",
           "X1979_2015_aveAI", "X2041_2060_d18_m18", "X2081_2099_d18_m18", 
           "X2041_2060_dAI_m14", "X2081_2099_dAI_m14", "X2041_2060_dAI_m13",
           "X2081_2099_dAI_m13")
@@ -85,9 +86,10 @@ ggplot(projAI2, aes(x = X1979_2015_aveAI, y = X2081_2099_18model_AI,
 
 ```
 
+
+
 ```{r}
-# Lollipop plot for average AI
-attach(projAI2)
+# Lollipop plot for average AI of all protected areas
 projAI3 <- projAI2[order(X1979_2015_aveAI), ]
           
 
@@ -108,7 +110,11 @@ ggplot(projAI3) +
   ylab("mean annual aridity index (mm)")
   #+ facet_grid(Grassland_Type ~ .)
 
+projAI3[which(Unit_Nm == "Big Stone National Wildlife Refuge"), ]
+
 ```
+
+Create new dataframe with state included in Unit Name. 
 
 ```{r, graphs for individual grassland types}
 
@@ -117,6 +123,49 @@ ggplot(projAI3) +
 projAI3$St_Unit_Nm <- paste(projAI3$d_State_Nm, "-", projAI3$Unit_Nm)
 head(projAI3)
 
+```
+
+```{r}
+# Lollipop plot for average AI of top 10 dAI protected areas
+attach(projAI3)
+
+projAI3_top10end <- projAI3[with(projAI3,order(X2081_2099_18model_dAI)),]
+
+projAI3_top10end <- projAI3_top10end[1:10,]
+projAI3_top10end
+
+ggtop10end <- ggplot(projAI3_top10end, 
+                     aes(x = St_Unit_Nm, y = X1979_2015_aveAI)) +
+  geom_segment( aes(x = reorder(St_Unit_Nm, X2081_2099_18model_AI), 
+                    xend = St_Unit_Nm, 
+                    y = X1979_2015_aveAI, 
+                    yend = X2081_2099_18model_AI), color="grey") +
+  geom_point( aes(x = St_Unit_Nm, y = X1979_2015_aveAI), 
+              color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
+  geom_point( aes(x = St_Unit_Nm, y = X2081_2099_18model_AI), 
+              color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
+  coord_flip() +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    panel.border = element_blank() ) +
+  xlab("") +
+  ylab("mean annual aridity index (mm)") +
+  ylim(0, 2.5) +
+  theme(text = element_text(size=12, colour = "black")) +
+  geom_errorbar(aes(ymin=X1979_2015_aveAI-SD_histAI, 
+                    ymax=X1979_2015_aveAI+SD_histAI), 
+                width=.2,
+                 position=position_dodge(0.05))
+
+ggtop10end
+ggsave("ggtop10end.png", dpi = 300, height = 3, width = 7)
+
+```
+
+Lollipop plots for each grassland type. 
+
+```{r}
 tall <- projAI3[ which(projAI3$Grassland_Type == 'tall'),]
 head(tall)
 
@@ -124,7 +173,7 @@ mixed <- projAI3[ which(projAI3$Grassland_Type == 'mixed'),]
 sand <- projAI3[ which(projAI3$Grassland_Type == 'sand'),]
 short <- projAI3[ which(projAI3$Grassland_Type == 'short'),]
 
-ggtall <- ggplot(tall) +
+ggtall <- ggplot(tall, aes(x = St_Unit_Nm, y = X1979_2015_aveAI)) +
   geom_segment( aes(x = reorder(St_Unit_Nm, X2081_2099_18model_AI), 
                     xend = St_Unit_Nm, 
                     y = X1979_2015_aveAI, 
@@ -140,10 +189,14 @@ ggtall <- ggplot(tall) +
     panel.border = element_blank() ) +
   xlab("") +
     ylab(" ") +
-  ylim(0, 1.7) +
-  theme(text = element_text(size=14))
+  ylim(0, 2.5) +
+  theme(text = element_text(size=14)) +
+  geom_errorbar(aes(ymin=X1979_2015_aveAI-SD_histAI, 
+                    ymax=X1979_2015_aveAI+SD_histAI), 
+                width=.2,
+                 position=position_dodge(0.05))
 
-ggmixed <- ggplot(mixed) +
+ggmixed <- ggplot(mixed, aes(x = St_Unit_Nm, y = X1979_2015_aveAI)) +
   geom_segment( aes(x = reorder(St_Unit_Nm, X2081_2099_18model_AI), 
                     xend = St_Unit_Nm, 
                     y = X1979_2015_aveAI, 
@@ -159,10 +212,14 @@ ggmixed <- ggplot(mixed) +
     panel.border = element_blank() ) +
   xlab("") +
     ylab(" ") +
-  ylim(0, 1.7) +
-  theme(text = element_text(size=14))
+  ylim(0, 2.5) +
+  theme(text = element_text(size=14)) +
+  geom_errorbar(aes(ymin=X1979_2015_aveAI-SD_histAI, 
+                    ymax=X1979_2015_aveAI+SD_histAI), 
+                width=.2,
+                 position=position_dodge(0.05))
 
-ggsand <- ggplot(sand) +
+ggsand <- ggplot(sand, aes(x = St_Unit_Nm, y = X1979_2015_aveAI)) +
   geom_segment( aes(x = reorder(St_Unit_Nm, X2081_2099_18model_AI), 
                     xend = St_Unit_Nm, 
                     y = X1979_2015_aveAI, 
@@ -179,10 +236,14 @@ ggsand <- ggplot(sand) +
     panel.border = element_blank() ) +
   xlab("") +
   ylab(" ") +
-  ylim(0, 1.7) +
-  theme(text = element_text(size=14))
+  ylim(0, 2.5) +
+  theme(text = element_text(size=14)) +
+  geom_errorbar(aes(ymin=X1979_2015_aveAI-SD_histAI, 
+                    ymax=X1979_2015_aveAI+SD_histAI), 
+                width=.2,
+                 position=position_dodge(0.05))
 
-ggshort <- ggplot(short) +
+ggshort <- ggplot(short, aes(x = St_Unit_Nm, y = X1979_2015_aveAI)) +
   geom_segment( aes(x = reorder(St_Unit_Nm, X2081_2099_18model_AI), 
                     xend = St_Unit_Nm, 
                     y = X1979_2015_aveAI, 
@@ -198,13 +259,26 @@ ggshort <- ggplot(short) +
     panel.border = element_blank() ) +
   xlab("") +
   ylab("mean annual aridity index (mm)") +
-  ylim(0, 1.7) +
-  theme(text = element_text(size=14))
+  ylim(0, 2.5) +
+  theme(text = element_text(size=14)) +
+  geom_errorbar(aes(ymin=X1979_2015_aveAI-SD_histAI, 
+                    ymax=X1979_2015_aveAI+SD_histAI), 
+                width=.2,
+                 position=position_dodge(0.05))
 
 require(gridExtra)
+
+ggtall
 
 ggall <- grid.arrange(ggtall, ggmixed, ggsand, ggshort, ncol = 1)
 g <- arrangeGrob(ggtall, ggmixed, ggsand, ggshort, ncol = 1)
 ggsave("aveAI_largePAs.png", dpi = 300, height = 16, width = 8, g)
+
+```
+
+Subset just the 10 protected areas with the highest delta AI. 
+
+```{r}
+
 
 ```
