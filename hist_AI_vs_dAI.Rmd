@@ -314,7 +314,25 @@ ggsave("aveAI_largePAs.png", dpi = 300, height = 10, width = 8, g)
 
 ```
 
-Subset just the 10 protected areas with the highest delta AI. 
+Lollipop plots for US-wide drought (Model 13)
+
+```{r}
+# Create new variables for models 13, 14, and 18 by adding (subtracts b/c of
+# negative dAI) dAI to 1979-2015 average AI to get projected future AI, both
+# for 2041-2060 and 2081-2099. 
+projAI3$St_Unit_Nm <- paste(projAI3$d_State_Nm, "-", projAI3$Unit_Nm)
+head(projAI3)
+
+```
+
+Lollipop plots for the lowest Standard Deviation in AI by end-of-century (Model 14)
+
+```{r}
+
+
+```
+
+Lollipop plots for increasing humidity in the northern midwest (Model 18) (the only model with positive mdeian AI)
 
 ```{r}
 
